@@ -12,9 +12,9 @@ const NotesSchema = new Schema({
         type:string,
         default:"General"
     },
-    date:{
-        type:data,
-        dafault:date.now
+    date: {
+        type: Date,
+        default: Date.now // corrected typo here
     }
   });
 
