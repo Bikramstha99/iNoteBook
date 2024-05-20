@@ -4,7 +4,9 @@ const bcrypt = require('bcryptjs');
 const router = express.Router();
 const {body,validationResult}=require('express-validator')
 var jwt =require('jsonwebtoken');
-//Create a user using POST"/api/auth".Doesn't require Auth
+const fetchuser= require('../middleware/fetchuser')
+
+//Route 1:Create a user using POST"/api/auth".Doesn't require Auth
 
 const JWT_SECRET= 'BikramShrestha'
 
@@ -51,7 +53,7 @@ router.post('/createuser', [
 }
 });
 
-//AUthenicate a  User using : Post "/api/auth.login".
+//Route 2: AUthenicate a  User using : Post "/api/auth.login".
 router.post('/login', [
     body('email','Enter a valid email').isEmail(),
     body('password','Password cannot be blank').exists(),
@@ -65,7 +67,7 @@ router.post('/login', [
 
      const{email,password}=req.body;
      try {
-        let user = User.findOne({email});
+        let user = await User.findOne({email});
         if(!user){
             return res.status(400).json({error: "Please try to login with correct credentials"});
         }
@@ -81,7 +83,7 @@ router.post('/login', [
                 id: user.id
             }
         }
-        const authToken= jwt.sign(data, JWT_SECRET);
+        const authToken= await jwt.sign(data, JWT_SECRET);
         res.json({authToken})
     
 
@@ -89,6 +91,19 @@ router.post('/login', [
         console.error(error.message);
         res.status(500).send("Internal Server error");
     }
+});
+
+//Route 3: Get Loggedin User Details using: Post "/api/auth/getuser". Login required
+router.post('/getUser',fetchuser, async (req, res) => 
+    {
+try{ 
+    userId=req.user.id;
+    const user = await User.findById(userId).select("-password")
+    res.send(user);
+} catch(error){
+        console.error(error.message);
+        res.status(500).send("Internal Server error");
+}
 })
 
 module.exports = router;
